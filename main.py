@@ -45,7 +45,7 @@ folderPath = os.path.join(os.getcwd(), dirName)
 
 
 # 得到 m3u8 網址
-htmlfile = cloudscraper.create_scraper(browser='firefox', delay=10).get(url)
+htmlfile = cloudscraper.create_scraper(browser='chrome', delay=10).get(url)
 result = re.search("https://.+m3u8", htmlfile.text)
 m3u8url = result[0]
 
@@ -55,10 +55,12 @@ downloadurl = '/'.join(m3u8urlList)
 
 
 # 儲存 m3u8 file 至資料夾
+
 m3u8file = os.path.join(folderPath, dirName + '.m3u8')
+opener = urllib.request.build_opener()
+opener.addheaders = [('User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'), ('Referer', 'https://jable.tv')]
+urllib.request.install_opener(opener)
 urllib.request.urlretrieve(m3u8url, m3u8file)
-
-
 # In[5]:
 
 
@@ -66,7 +68,6 @@ urllib.request.urlretrieve(m3u8url, m3u8file)
 m3u8obj = m3u8.load(m3u8file)
 m3u8uri = ''
 m3u8iv = ''
-
 for key in m3u8obj.keys:
     if key:
         m3u8uri = key.uri
@@ -81,7 +82,6 @@ for seg in m3u8obj.segments:
 
 # In[6]:
 
-
 # 有加密
 if m3u8uri:
     m3u8keyurl = downloadurl + '/' + m3u8uri  # 得到 key 的網址
@@ -89,7 +89,7 @@ if m3u8uri:
     # 得到 key的內容
     response = requests.get(m3u8keyurl, headers=headers, timeout=10)
     contentKey = response.content
-
+    print(contentKey)
     vt = m3u8iv.replace("0x", "")[:16].encode()  # IV取前16位
 
     ci = AES.new(contentKey, AES.MODE_CBC, vt)  # 建構解碼器
